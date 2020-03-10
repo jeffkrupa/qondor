@@ -44,7 +44,7 @@ class SHFile(object):
 
     def set_env_variables(self):
         lines = []
-        for key, value in self.preprocessing.env.iteritems():
+        for key, value in self.preprocessing.env.items():
             lines.append('export {0}={1}'.format(key, value))
         lines.append('')
         return lines
@@ -130,6 +130,7 @@ class Submitter(object):
             'error' : 'err_$(Cluster)_$(Process).txt',
             'log' : 'log_$(Cluster)_$(Process).txt',
             'should_transfer_files' : 'YES',
+            '+REQUIRED_OS' : 'rhel7',
             'environment' : {
                 'QONDOR_BATCHMODE' : '1',
                 'CONDOR_CLUSTER_NUMBER' : '$(Cluster)',
@@ -147,7 +148,7 @@ class Submitter(object):
                 'htcondor setup requires it.'
                 )
         try:
-            sub['environment']['USER'] = os.environ['USER']
+            sub['environment']['USER'] = 'jkrupa' #os.environ['jkrupa']
         except KeyError:
             # No user specified, no big deal
             pass
@@ -218,11 +219,11 @@ class Submitter(object):
         sub['+QondorRundir']  =  '"' + self.rundir + '"'
 
         # Overwrite keys from the preprocessing
-        for key, value in self.preprocessing.htcondor.iteritems():
+        for key, value in self.preprocessing.htcondor.items():
             sub[key] = value
 
         # Flatten files in a string
-        transfer_files = self.transfer_files + self.preprocessing.files.values()
+        transfer_files = self.transfer_files + list(self.preprocessing.files.values())
         if len(transfer_files) > 0:
             sub['transfer_input_files'] = ','.join(transfer_files)
         
@@ -277,7 +278,7 @@ def htcondor_format_environment(env):
     """
     return ('"' +
         ' '.join(
-            [ '{0}=\'{1}\''.format(key, value) for key, value in env.iteritems() ]
+            [ '{0}=\'{1}\''.format(key, value) for key, value in env.items() ]
             )
         + '"'
         )

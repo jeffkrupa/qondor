@@ -95,30 +95,17 @@ class ScheddManager(object):
     @cache_return_value
     def get_schedd_ads(self):
         import htcondor
-        self.get_collector_node_addresses()
-        for node in self.collector_node_addresses:
-            collector = htcondor.Collector(node)
-            try:
-                self.schedd_ads = collector.query(
-                    htcondor.AdTypes.Schedd,
-                    projection = [
-                        'Name', 'MyAddress', 'MaxJobsRunning', 'ShadowsRunning',
-                        'RecentDaemonCoreDutyCycle', 'TotalIdleJobs'
-                        ],
-                    constraint = self.schedd_constraints
-                    )
-                if self.schedd_ads:
-                    # As soon as schedd_ads are found in one collector node, use those
-                    # This may not be the correct choice for some batch systems
-                    break
-            except Exception as e:
-                logger.debug('Failed querying %s: %s', node, e)
-                continue
-        else:
-            logger.error('Failed to collect any schedds from %s', self.collector_node_addresses)
-            raise RuntimeError
+        collector = htcondor.Collector()
+        self.schedd_ads = collector.query(
+            htcondor.AdTypes.Schedd,
+            projection = [
+            'Name', 'MyAddress', 'MaxJobsRunning', 'ShadowsRunning',
+            'RecentDaemonCoreDutyCycle', 'TotalIdleJobs'
+            ]
+        )
         logger.debug('Found schedd ads %s', self.schedd_ads)
-        return self.schedd_ads
+        return self.schedd_ads    
+
 
     @cache_return_value
     def get_best_schedd(self):
@@ -194,7 +181,7 @@ def get_schedds(renew=False):
 
 
 def get_jobs(cluster_id, proc_id=None):
-    requirements = 'ClusterId=={0}'.format(cluster_id)
+    requirements = 'GLIDEIN_Site == "MIT_CampusFactory" && BOSCOGroup == "bosco_cms" && HAS_CVMFS_cms_cern_ch && BOSCOCluster == "ce03.cmsaf.mit.edu" && ClusterId=={0}'.format(cluster_id)
     if not(proc_id is None): requirements += ' && ProcId == {0}'.format(proc_id)
     classads = []
     logger.debug('requirements = %s', requirements)
