@@ -87,6 +87,7 @@ class CMSSW(object):
     def rename_project(self):
         if self._is_renamed: return
         self._is_renamed = True
+        print("CMSSW", self.cmssw_src)
         logger.info('Renaming project %s', self.cmssw_src)
         self.run_commands_nocmsenv(['scram b ProjectRename'])
 

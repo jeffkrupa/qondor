@@ -44,7 +44,7 @@ class SHFile(object):
 
     def set_env_variables(self):
         lines = []
-        for key, value in self.preprocessing.env.items():
+        for key, value in self.preprocessing.env.iteritems():
             lines.append('export {0}={1}'.format(key, value))
         lines.append('')
         return lines
@@ -130,7 +130,11 @@ class Submitter(object):
             'error' : 'err_$(Cluster)_$(Process).txt',
             'log' : 'log_$(Cluster)_$(Process).txt',
             'should_transfer_files' : 'YES',
-            '+REQUIRED_OS' : 'rhel7',
+            #'+DESIRED_Sites' : "T2_US_Wisconsin",
+            'use_x509userproxy' : 'True',  
+            'x509userproxy' : '/tmp/x509up_u2296',
+            '+AccountingGroup' : "analysis.jkrupa",
+            '+ProjectName' : 'sonic',
             'environment' : {
                 'QONDOR_BATCHMODE' : '1',
                 'CONDOR_CLUSTER_NUMBER' : '$(Cluster)',
@@ -219,7 +223,7 @@ class Submitter(object):
         sub['+QondorRundir']  =  '"' + self.rundir + '"'
 
         # Overwrite keys from the preprocessing
-        for key, value in self.preprocessing.htcondor.items():
+        for key, value in self.preprocessing.htcondor.iteritems():
             sub[key] = value
 
         # Flatten files in a string
@@ -278,7 +282,7 @@ def htcondor_format_environment(env):
     """
     return ('"' +
         ' '.join(
-            [ '{0}=\'{1}\''.format(key, value) for key, value in env.items() ]
+            [ '{0}=\'{1}\''.format(key, value) for key, value in env.iteritems() ]
             )
         + '"'
         )

@@ -181,7 +181,10 @@ def get_schedds(renew=False):
 
 
 def get_jobs(cluster_id, proc_id=None):
-    requirements = 'GLIDEIN_Site == "MIT_CampusFactory" && BOSCOGroup == "bosco_cms" && HAS_CVMFS_cms_cern_ch && BOSCOCluster == "ce03.cmsaf.mit.edu" && ClusterId=={0}'.format(cluster_id)
+    requirements = 'ClusterId=={0}'.format(cluster_id)
+
+    requirements += '(OSGVO_OS_STRING == "RHEL 7" && HAS_CVMFS_cms_cern_ch) || (HAS_SINGULARITY == true || GLIDEIN_REQUIRED_OS == "rhel7") || (GLIDEIN_Site == "MIT_CampusFactory" && (BOSCOGroup == "paus" || BOSCOGroup == "bosco_cms") && HAS_CVMFS_cms_cern_ch)'
+
     if not(proc_id is None): requirements += ' && ProcId == {0}'.format(proc_id)
     classads = []
     logger.debug('requirements = %s', requirements)

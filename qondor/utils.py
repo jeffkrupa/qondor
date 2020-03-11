@@ -300,7 +300,7 @@ def extract_tarball_cmssw(tarball, outdir='.', dry=False):
     extract_tarball(tarball, outdir, dry)
     # return the CMSSW directory
     if dry: return 'CMSSW_dry'
-    return [ d for d in glob.glob(osp.join(outdir, 'CMSSW*')) if not d.endswith('.gz')][0]
+    return [ d for d in glob.glob(osp.join(outdir, 'CMSSW*')) if not d.endswith('.tgz')][0]
 
 
 def check_is_cmssw_path(path):
