@@ -27,5 +27,5 @@ if os.environ.get('HOSTNAME', '').endswith('fnal.gov'):
         '/usr/lib64/python2.6/site-packages',
         '/usr/lib64/python2.7/site-packages'
         ])
-    schedd.GLOBAL_SCHEDDMAN_CLS = schedd.ScheddManagerFermiHTC
-    DEFAULT_MGM = 'root://cmseos.fnal.gov'
+#    schedd.GLOBAL_SCHEDDMAN_CLS = schedd.ScheddManagerFermiHTC
+#    DEFAULT_MGM = 'root://cmseos.fnal.gov'

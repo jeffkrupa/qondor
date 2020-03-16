@@ -94,27 +94,25 @@ class ScheddManager(object):
 
     @cache_return_value
     def get_schedd_ads(self):
+        print 'helloxx'
         import htcondor
         collector = htcondor.Collector()
-        self.schedd_ads = collector.query(
-            htcondor.AdTypes.Schedd,
-            projection = [
-            'Name', 'MyAddress', 'MaxJobsRunning', 'ShadowsRunning',
-            'RecentDaemonCoreDutyCycle', 'TotalIdleJobs'
-            ]
-        )
+        self.schedd_ads = collector.locate(htcondor.DaemonTypes.Schedd)
         logger.debug('Found schedd ads %s', self.schedd_ads)
+        print self.schedd_ads
         return self.schedd_ads    
+
+
 
 
     @cache_return_value
     def get_best_schedd(self):
         import htcondor
-        self.get_schedd_ads()
-        self.schedd_ads.sort(key = self.get_schedd_weight)
-        best_schedd_ad = self.schedd_ads[0]
-        logger.debug('Best schedd is %s', best_schedd_ad['Name'])
-        schedd = htcondor.Schedd(best_schedd_ad)
+        #self.schedd_ads.sort(key = self.get_schedd_weight)
+        #best_schedd_ad = self.schedd_ads[0]
+        #logger.debug('Best schedd is %s', best_schedd_ad['Name'])
+        #schedd = htcondor.Schedd(best_schedd_ad)
+        schedd = htcondor.Schedd(self.get_schedd_ads())
         return schedd
 
     @cache_return_value
@@ -123,35 +121,35 @@ class ScheddManager(object):
         return [ htcondor.Schedd(schedd_ad) for schedd_ad in self.get_schedd_ads() ]
 
     def get_schedd_weight(self, schedd_ad):
-        duty_cycle = schedd_ad['RecentDaemonCoreDutyCycle'] * 100
-        occupancy = (schedd_ad['ShadowsRunning'] / schedd_ad['MaxJobsRunning']) * 100
-        n_idle_jobs = schedd_ad['TotalIdleJobs']
-        weight = 0.7 * duty_cycle + 0.2 * occupancy + 0.1 * n_idle_jobs
-        logger.debug(
-            'Weight calc for %s: weight = %s, '
-            'duty_cycle = %s, occupancy = %s, n_idle_jobs = %s',
-            schedd_ad['Name'], weight, duty_cycle, occupancy, n_idle_jobs
-            )
-        return weight
+        #duty_cycle = schedd_ad['RecentDaemonCoreDutyCycle'] * 100
+        #occupancy = (schedd_ad['ShadowsRunning'] / schedd_ad['MaxJobsRunning']) * 100
+        #n_idle_jobs = schedd_ad['TotalIdleJobs']
+        #weight = 0.7 * duty_cycle + 0.2 * occupancy + 0.1 * n_idle_jobs
+        #logger.debug(
+        #    'Weight calc for %s: weight = %s, '
+        #    'duty_cycle = %s, occupancy = %s, n_idle_jobs = %s',
+        #    schedd_ad['Name'], weight, duty_cycle, occupancy, n_idle_jobs
+        #    )
+        return 1.# weight
 
 
-class ScheddManagerFermiHTC(ScheddManager):
-    """
-    Subclass of ScheddManager specifically for the Fermilab HTCondor setup
-    """
-    def __init__(self):
-        super(ScheddManagerFermiHTC, self).__init__()
-        self.schedd_constraints = 'FERMIHTC_DRAIN_LPCSCHEDD=?=FALSE && FERMIHTC_SCHEDD_TYPE=?="CMSLPC"'
+#class ScheddManagerFermiHTC(ScheddManager):
+#    """
+#    Subclass of ScheddManager specifically for the Fermilab HTCondor setup
+#    """
+#    def __init__(self):
+#        super(ScheddManagerFermiHTC, self).__init__()
+#        self.schedd_constraints = 'FERMIHTC_DRAIN_LPCSCHEDD=?=FALSE && FERMIHTC_SCHEDD_TYPE=?="CMSLPC"'
 
-    @cache_return_value
-    def get_collector_node_addresses(self):
-        import htcondor
-        try:
-            collector_node_addresses = htcondor.param['FERMIHTC_REMOTE_POOL']
-            self.collector_node_addresses = re.findall(r'[\w\/\:\/\-\/\.]+', collector_node_addresses)
-            logger.info('Set collector_node_addresses to %s', collector_node_addresses)
-        except KeyError:
-            super(ScheddManagerFermiHTC, self).get_collector_node_addresses()
+#    @cache_return_value
+#    def get_collector_node_addresses(self):
+#        import htcondor
+#        try:
+#            collector_node_addresses = htcondor.param['FERMIHTC_REMOTE_POOL']
+#            self.collector_node_addresses = re.findall(r'[\w\/\:\/\-\/\.]+', collector_node_addresses)
+#            logger.info('Set collector_node_addresses to %s', collector_node_addresses)
+#        except KeyError:
+#            super(ScheddManagerFermiHTC, self).get_collector_node_addresses()
 
 
 # -------------- Convenience functions
@@ -181,11 +179,11 @@ def get_schedds(renew=False):
 
 
 def get_jobs(cluster_id, proc_id=None):
-    requirements = 'ClusterId=={0}'.format(cluster_id)
+    requirements = 'FERMIHTC_JobType="HEPCLOUD"' #'ClusterId=={0}'.format(cluster_id)
 
-    requirements += '(OSGVO_OS_STRING == "RHEL 7" && HAS_CVMFS_cms_cern_ch) || (HAS_SINGULARITY == true || GLIDEIN_REQUIRED_OS == "rhel7") || (GLIDEIN_Site == "MIT_CampusFactory" && (BOSCOGroup == "paus" || BOSCOGroup == "bosco_cms") && HAS_CVMFS_cms_cern_ch)'
+    #requirements += '(OSGVO_OS_STRING == "RHEL 7" && HAS_CVMFS_cms_cern_ch) || (HAS_SINGULARITY == true || GLIDEIN_REQUIRED_OS == "rhel7") || (GLIDEIN_Site == "MIT_CampusFactory" && (BOSCOGroup == "paus" || BOSCOGroup == "bosco_cms") && HAS_CVMFS_cms_cern_ch)'
 
-    if not(proc_id is None): requirements += ' && ProcId == {0}'.format(proc_id)
+    #if not(proc_id is None): requirements += ' && ProcId == {0}'.format(proc_id)
     classads = []
     logger.debug('requirements = %s', requirements)
     for schedd in get_schedds():

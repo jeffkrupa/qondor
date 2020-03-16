@@ -69,7 +69,7 @@ class SHFile(object):
             'export PYTHONPATH="${pip_install_dir}/lib/python2.7/site-packages:${PYTHONPATH}"',
             '',
             'echo $(pwd)',
-            'xrdcp root://cmseos.fnal.gov//store/user/jkrupa/out.root .',
+            'xrdcp root://cmseos.fnal.gov//store/user/jkrupa/out_skim.root .',
             'pip -V',
             'which pip',
             ''
@@ -127,6 +127,7 @@ class Submitter(object):
         Returns the default submission dict (the equivalent of a .jdl file)
         to be used by the submitter. Implemented like this to be subclassable.
         """
+
         sub = {
             'universe' : 'vanilla',
             'output' : 'out_$(Cluster)_$(Process).txt',
@@ -134,11 +135,24 @@ class Submitter(object):
             'log' : 'log_$(Cluster)_$(Process).txt',
             'should_transfer_files' : 'YES',
             'Transfer_output_files' : '',
-            '+DESIRED_Sites' : "T2_US_Wisconsin",
-            'use_x509userproxy' : 'True',  
-            'x509userproxy' : '/tmp/x509up_u2296',
-            '+AccountingGroup' : "analysis.jkrupa",
-            '+ProjectName' : 'sonic',
+            #'+SingularityImage' :  '/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7/',
+            #'+SingularityBindCVMFS' : 'True',
+            'RequestDisk' : '10',
+            'RequestCpus' : '1',
+            '+Require_CVMFS' : 'True',
+            '+VO' : '"cms"',
+            '+REQUIRED_OS' : '"rhel7"',
+            '+CMS_JobType' : '"Production"',
+            '+MaxWallTimeMins' : '120',
+            '+JOB_EXPECTED_MAX_LIFETIME' : '7200',
+            '+JobPrio' : '200000',
+            '+DESIRED_Sites' : '"T3_US_HEPCloud"',
+            '+RequestMaxInputRate' : '10',            
+            '+RequestMaxOutputRate' : '10',            
+            '+RequestMaxInputDataSize' : '10',            
+            '+RequestMaxOutputDataSize' : '10',  
+            #'+AccountingGroup' : "analysis.jkrupa",          
+            'x509userproxy' : '/tmp/x509up_u54733',  
             'environment' : {
                 'QONDOR_BATCHMODE' : '1',
                 'CONDOR_CLUSTER_NUMBER' : '$(Cluster)',
@@ -156,16 +170,16 @@ class Submitter(object):
                 'htcondor setup requires it.'
                 )
         try:
-            sub['environment']['USER'] = 'jkrupa' #os.environ['jkrupa']
+            sub['environment']['USER'] = os.environ['USER'] #'jkrupa' #os.environ['jkrupa']
         except KeyError:
             # No user specified, no big deal
             pass
         return sub
 
-    def __init__(self, python_file, dry=False):
+    def __init__(self, python_file, name, dry=False):
         super(Submitter, self).__init__()
         self.original_python_file = osp.abspath(python_file)
-
+        self.name = name
         self.python_base = osp.basename(self.original_python_file)
         self.python_name = self.python_base.replace('.py','')
         self.dry = dry
@@ -188,7 +202,8 @@ class Submitter(object):
             raise
 
     def make_rundir(self):
-        self.rundir = osp.abspath('qondor_{0}_{1}'.format(
+        self.rundir = osp.abspath('qondor_{0}_{1}_{2}'.format(
+            self.name,
             self.python_name,
             strftime('%Y%m%d_%H%M%S')
             ))
@@ -271,6 +286,7 @@ def htcondor_submit(sub, njobs=1, submission_dir='.'):
     schedd = qondor.get_best_schedd(renew=True)
     with qondor.utils.switchdir(submission_dir):
         submit_object = htcondor.Submit(sub)
+        print schedd
         with schedd.transaction() as transaction:
             ad = []
             cluster_id = submit_object.queue(transaction, njobs, ad)

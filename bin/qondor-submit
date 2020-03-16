@@ -4,11 +4,12 @@ import qondor
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('pythonfile', type=str, help='Path to a python file to be submitted to htcondor')
+parser.add_argument('name',       type=str, help='Name of job')
 args = parser.parse_args()
 
 def main():
     qondor.utils.check_proxy()
-    submitter = qondor.Submitter(args.pythonfile)
+    submitter = qondor.Submitter(args.pythonfile, args.name)
     cluster_id, ads = submitter.submit()
 
 if __name__ == '__main__':

@@ -383,9 +383,9 @@ def get_now_utc():
 
 
 def sleep_until(runtime_utc, allowed_lateness=300, is_not_utc=False):
-    if is_not_utc:
-        runtime_utc = convert_to_utc(runtime_utc)
-    now_utc = get_now_utc()
+    #if is_not_utc:
+    #    runtime_utc = convert_to_utc(runtime_utc)
+    now_utc = datetime.datetime.now() - datetime.timedelta(hours=5) #get_now_utc()
     logger.info('Current time (UTC):       %s', now_utc)
     logger.info('Scheduled run time (UTC): %s', runtime_utc)
 
